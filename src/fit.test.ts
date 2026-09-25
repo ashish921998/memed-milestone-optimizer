@@ -54,7 +54,7 @@ assert.equal(applyLadder(1e9, ladder), 1000);
 // (v) recommend keeps rate <= cap; uncapped spends ~budget at p90; capped reports headroom.
 const campaigns = ['A', 'B', 'X', 'F'].map((campaign_id) => ({ campaign_id, category: 'gaming', platform: 'instagram' }) as Campaign);
 const history: History = { campaigns, ladders: [], creators: [], posts };
-const base = { category: 'gaming', platform: 'instagram', target_creator_tier: 'micro', expected_creators: 40 } as const;
+const base = { category: 'gaming', platform: 'instagram', target_creator_tier: 'micro', expected_creators: 40, tier_mix: { micro: 1 } } as const;
 const tight = recommend({ ...base, total_budget: 5000 }, history);
 assert.ok(!tight.capped && tight.rate_per_1k <= tight.creator_rate_cap);
 close(tight.spend_p90 / 5000, 1, 0.01, 'uncapped p90 spend vs budget');
@@ -62,4 +62,12 @@ assert.equal(tight.headroom, 0);
 assert.ok(tight.rungs.every((r, i) => i === 0 || r.view_threshold > tight.rungs[i - 1].view_threshold));
 const loose = recommend({ ...base, total_budget: 1e9 }, history);
 assert.ok(loose.capped && loose.rate_per_1k === loose.creator_rate_cap && loose.headroom > 0);
+assert.deepEqual(loose.ladders.micro, loose.rungs);
+
+// Tier spill: 30% of creators from a higher tier, paid on their own ladder at the same (capped) rate, costs more.
+const spill = recommend({ ...base, total_budget: 1e9, tier_mix: { micro: 0.7, mid: 0.3 } }, history);
+assert.equal(spill.rate_per_1k, loose.rate_per_1k);
+assert.ok(spill.spend_p90 > loose.spend_p90, `spill ${spill.spend_p90} vs ${loose.spend_p90}`);
+assert.deepEqual(spill.ladders.micro, spill.rungs);
+assert.ok(spill.ladders.mid![0].view_threshold > spill.rungs[0].view_threshold);
 console.log('fit.test: ok');

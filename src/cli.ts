@@ -1,12 +1,12 @@
 // Usage: node src/cli.ts <input.json> [--json]
-//    or: node src/cli.ts --category gaming --platform instagram --budget 500000 --tier micro [--creators 60] [--cpm 80] [--exclude C007] [--json]
+//    or: node src/cli.ts --category gaming --platform instagram --budget 500000 --tier micro [--creators 60] [--cpm 80] [--exclude C007] [--tier-mix nano:0.3,micro:0.7] [--json]
 import { readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { SHRINKAGE_PSEUDO_COUNT } from './config.ts';
 import { loadHistory } from './fit.ts';
 import { recommend } from './recommend.ts';
 import { CATEGORIES, PLATFORMS, TIERS } from './types.ts';
-import type { CampaignInput } from './types.ts';
+import type { CampaignInput, Tier } from './types.ts';
 
 const { values: v, positionals } = parseArgs({
   allowPositionals: true,
@@ -18,6 +18,7 @@ const { values: v, positionals } = parseArgs({
     creators: { type: 'string' },
     cpm: { type: 'string' },
     exclude: { type: 'string' },
+    'tier-mix': { type: 'string' },
     json: { type: 'boolean', default: false },
   },
 });
@@ -35,6 +36,7 @@ const input: CampaignInput = positionals[0]
       exclude_campaign_id: v.exclude,
     } as CampaignInput;
 if (positionals[0] && v.exclude) input.exclude_campaign_id = v.exclude;
+if (v['tier-mix']) input.tier_mix = Object.fromEntries(v['tier-mix'].split(',').map((kv) => [kv.split(':')[0], Number(kv.split(':')[1])]));
 
 const problems = [
   !CATEGORIES.includes(input.category) && `category must be one of ${CATEGORIES.join(', ')}`,
@@ -43,6 +45,9 @@ const problems = [
   !(input.total_budget > 0) && 'budget must be a positive number',
   input.expected_creators !== undefined && !(Number.isInteger(input.expected_creators) && input.expected_creators > 0) && 'creators must be a positive integer',
   input.cpm_override !== undefined && !(input.cpm_override > 0) && 'cpm must be a positive number',
+  input.tier_mix &&
+    !(Object.entries(input.tier_mix).every(([t, w]) => TIERS.includes(t as Tier) && (w ?? -1) >= 0) && Object.values(input.tier_mix).some((w) => w! > 0)) &&
+    'tier-mix must look like nano:0.3,micro:0.7 with known tiers and non-negative weights',
 ].filter(Boolean);
 if (problems.length) {
   console.error(problems.join('\n'));
@@ -60,8 +65,16 @@ for (const r of rec.rungs) {
   console.log(`${String(r.rank).padEnd(6)}p${String(r.percentile * 100).padEnd(5)}${reach.padEnd(7)}${r.view_threshold.toLocaleString('en-IN').padStart(20)}  ${rs(r.payout_amount).padStart(17)}  ${per1k.padStart(9)}`);
 }
 
+const share = (t: Tier) => `${Math.round(rec.tier_mix[t] * 100)}%`;
+for (const t of TIERS) {
+  const l = rec.ladders[t];
+  if (!l || t === rec.tier) continue;
+  console.log(`${t} (${share(t)} of creators): ${l.map((r) => r.view_threshold.toLocaleString('en-IN')).join(' / ')} views -> Rs ${l.map((r) => r.payout_amount.toLocaleString('en-IN')).join(' / ')}`);
+}
+
 const pct = (x: number) => `${((x / input.total_budget) * 100).toFixed(0)}% of budget`;
 console.log(`\ncreators         ${rec.expected_creators}${input.expected_creators ? '' : ' (median of similar campaigns)'}`);
+console.log(`tier mix         ${TIERS.filter((t) => rec.tier_mix[t] > 0).map((t) => `${t} ${share(t)}`).join(', ')}${input.tier_mix ? '' : ' (similar campaigns)'}`);
 console.log(`spend p50        ${rs(rec.spend_p50)} (${pct(rec.spend_p50)})`);
 console.log(`spend p90        ${rs(rec.spend_p90)} (${pct(rec.spend_p90)})`);
 console.log(`spend mean       ${rs(rec.spend_mean)} (${pct(rec.spend_mean)})`);

@@ -2,7 +2,7 @@
 import { readCsv } from './csv.ts';
 import { SHRINKAGE_PSEUDO_COUNT } from './config.ts';
 import { mean, stddev, quantile } from './stats.ts';
-import { FORMATS_BY_PLATFORM } from './types.ts';
+import { FORMATS_BY_PLATFORM, TIERS } from './types.ts';
 import type { Campaign, Category, Creator, FitLevel, Format, HistoricalRung, Platform, Post, Tier } from './types.ts';
 
 // posts.csv has no category or tier; they come from the campaign and the creator.
@@ -113,4 +113,12 @@ export function defaultFormatMix(posts: Post[], platform: Platform): Partial<Rec
   return Object.fromEntries(
     formats.map((f) => [f, onPlatform.length ? onPlatform.filter((p) => p.format === f).length / onPlatform.length : 1 / formats.length]),
   );
+}
+
+// Share of participant tiers among campaigns with the same target tier, else all campaigns.
+export function defaultTierMix(campaigns: Campaign[], posts: HistPost[], targetTier: Tier, excludeCampaignId?: string): Record<Tier, number> {
+  const same = new Set(campaigns.filter((c) => c.target_creator_tier === targetTier && c.campaign_id !== excludeCampaignId).map((c) => c.campaign_id));
+  const pool = posts.filter((p) => p.campaign_id !== excludeCampaignId && same.has(p.campaign_id));
+  const use = pool.length ? pool : posts.filter((p) => p.campaign_id !== excludeCampaignId);
+  return Object.fromEntries(TIERS.map((t) => [t, use.filter((p) => p.tier === t).length / use.length])) as Record<Tier, number>;
 }

@@ -69,6 +69,7 @@ export interface CampaignInput {
   target_creator_tier: Tier;
   expected_creators?: number; // default: median of similar historical campaigns
   format_mix?: Partial<Record<Format, number>>; // default: historical mix for the platform
+  tier_mix?: Partial<Record<Tier, number>>; // participant tiers; default: historical mix for campaigns with this target tier
   cpm_override?: number; // paid-media CPM in Rs per 1K views; default from config table
   exclude_campaign_id?: string; // backtest: leave this campaign out of the fit
 }
@@ -90,7 +91,9 @@ export interface FitLevel {
 export interface Recommendation {
   input: CampaignInput;
   tier: Tier;
-  rungs: Rung[];
+  rungs: Rung[]; // the target tier's ladder, same as ladders[tier]
+  tier_mix: Record<Tier, number>; // resolved share of creators per tier
+  ladders: Partial<Record<Tier, Rung[]>>; // one ladder per tier in the mix, same rate per view (decision 2)
   rate_per_1k: number; // Rs per 1K views actually used
   cpm_anchor: number; // paid-media CPM used as the ceiling
   creator_rate_cap: number; // cpm_anchor * CREATOR_SHARE_OF_CPM
