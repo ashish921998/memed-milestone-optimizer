@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { mulberry32, randn, randLognormal, quantile } from './stats.ts';
 import { writeCsv } from './csv.ts';
 import { CATEGORIES, PLATFORMS, TIERS, FORMATS_BY_PLATFORM } from './types.ts';
+import { CPM_TABLE, CREATOR_SHARE_OF_CPM } from './config.ts';
 import type { Campaign, Creator, HistoricalRung, Post, Platform, Tier, Format, Category } from './types.ts';
 
 const rng = mulberry32(42);
@@ -21,8 +22,8 @@ const day = (d: number) => new Date(Date.UTC(2025, 0, 1) + d * 86_400_000).toISO
 
 const TIER_MIX: Record<Tier, number> = { nano: 0.4, micro: 0.35, mid: 0.2, macro: 0.05 };
 const TIER_BAND: Record<Tier, [number, number]> = { nano: [1e3, 1e4], micro: [1e4, 1e5], mid: [1e5, 1e6], macro: [1e6, 1e7] };
-// Budget anchored to plausible reach: ~65 creators x tier median views x Rs 90 per 1K, scaled by U[0.7, 3.0], floor Rs 25K,
-// so history holds both tight and loose budgets. Reach-blind fixed ranges made every campaign underspend.
+// Budget the way a brand would: expected reach (~65 creators x tier median views) priced at the category's creator
+// CPM, times a tight/loose factor U[0.5, 2.0], floor Rs 25K. Reach-blind fixed ranges made every campaign underspend.
 const REACH_MID: Record<Platform, number> = { instagram: 0.26, youtube: 0.38 }; // blended views per follower
 const VIEWS_PER_FOLLOWER: Record<Format, number> = { reel: 0.3, carousel: 0.15, short: 0.5, long_form: 0.1 };
 const CATEGORY_MULT: Record<Category, number> = { entertainment: 1.3, gaming: 1.1, D2C: 1.0, FMCG: 0.9, finance: 0.6 };
@@ -74,7 +75,7 @@ for (let i = 0; i < 40; i++) {
     brand: `Brand_${pad(i + 1, 2)}`,
     category,
     platform,
-    total_budget: Math.max(25_000, Math.round(((expectedViews * 90) / 1000) * uniform(0.7, 3.0) / 1000) * 1000),
+    total_budget: Math.max(25_000, Math.round(((expectedViews * CPM_TABLE[category][platform] * CREATOR_SHARE_OF_CPM) / 1000) * uniform(0.5, 2.0) / 1000) * 1000),
     start_date: day(start),
     end_date: day(start + randInt(30, 100)),
     target_creator_tier: tier,

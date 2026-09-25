@@ -49,7 +49,7 @@ Synthetic data
 - Flagged posts: 5% of posts. Day-7 views inflated 3x to 8x above what the account's history predicts, and 90%+ of those views land in the first 24 hours (the spike signature).
 - Viral tail: 3% of clean posts get an extra multiplier drawn uniformly from 5x to 20x. This is the part the lognormal will not fit, on purpose (decision 23).
 - One post per creator per campaign. Simplification, marked in code.
-- Campaigns: 40, spread across 5 categories x 2 platforms. Budgets anchored to expected reach (about 65 creators x the tier's median views x Rs 90 per 1K views) times a factor between 0.7 and 3.0 with a Rs 25K floor, so history holds both tight and loose budgets. An earlier fixed Rs 1-25 lakh range made every campaign underspend, which would have made the backtest meaningless. 30 to 100 participating creators each.
+- Campaigns: 40, spread across 5 categories x 2 platforms. Budgets set the way a brand would: expected reach (about 65 creators x the tier's median views) priced at the category's creator CPM from the config table, times a tight/loose factor between 0.5 and 2.0, floor Rs 25K. So history holds both tight and loose budgets, and the budget assumption is the same CPM assumption the method uses, stated once. An earlier fixed Rs 1-25 lakh range made every campaign underspend, which would have made the backtest meaningless. 30 to 100 participating creators each.
 - historical_completion_rate per creator = share of their past campaigns with at least one milestone hit, computed from the generated posts.
 
 CPM anchor table (Rs per 1,000 views, paid media, Instagram / YouTube)
