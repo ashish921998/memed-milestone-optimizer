@@ -1,0 +1,13 @@
+{
+  "name": "memed-milestone-optimizer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.6" },
+  "scripts": {
+    "generate": "node src/generate-data.ts",
+    "recommend": "node src/cli.ts",
+    "backtest": "node src/backtest.ts",
+    "test": "node src/stats.test.ts && node src/fit.test.ts"
+  }
+}
