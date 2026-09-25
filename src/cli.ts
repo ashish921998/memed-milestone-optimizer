@@ -1,4 +1,5 @@
 // Usage: node src/cli.ts <input.json> [--json]
+// Add --data <dir> to run on a different history folder (CSV columns as in types.ts).
 //    or: node src/cli.ts --category gaming --platform instagram --budget 500000 --tier micro [--creators 60] [--cpm 80] [--exclude C007] [--tier-mix nano:0.3,micro:0.7] [--json]
 import { readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
@@ -20,6 +21,7 @@ const { values: v, positionals } = parseArgs({
     exclude: { type: 'string' },
     'tier-mix': { type: 'string' },
     json: { type: 'boolean', default: false },
+    data: { type: 'string', default: 'data' },
   },
 });
 
@@ -54,7 +56,7 @@ if (problems.length) {
   process.exit(1);
 }
 
-const rec = recommend(input, loadHistory());
+const rec = recommend(input, loadHistory(v.data));
 const rs = (x: number) => 'Rs ' + Math.round(x).toLocaleString('en-IN');
 
 console.log(`\n${input.category} / ${input.platform} / ${rec.tier}, budget ${rs(input.total_budget)}` + (input.exclude_campaign_id ? `, fit excludes ${input.exclude_campaign_id}` : ''));

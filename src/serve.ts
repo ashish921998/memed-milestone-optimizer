@@ -1,4 +1,4 @@
-// Usage: node src/serve.ts  -> http://localhost:8787
+// Usage: node src/serve.ts  -> http://localhost:8787   (DATA_DIR=path/to/csvs to use another history)
 // A form in front of the same recommend() the CLI uses. No build step, no dependencies.
 import { createServer } from 'node:http';
 import { loadHistory } from './fit.ts';
@@ -6,7 +6,7 @@ import { recommend } from './recommend.ts';
 import { CATEGORIES, PLATFORMS, TIERS } from './types.ts';
 import type { CampaignInput, Category, Platform, Tier } from './types.ts';
 
-const history = loadHistory();
+const history = loadHistory(process.env.DATA_DIR ?? 'data');
 const port = Number(process.env.PORT ?? 8787);
 const opts = (xs: readonly string[], sel: string) => xs.map((x) => `<option${x === sel ? ' selected' : ''}>${x}</option>`).join('');
 

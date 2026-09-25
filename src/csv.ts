@@ -8,12 +8,28 @@ export function writeCsv(path: string, rows: Record<string, unknown>[]): void {
   writeFileSync(path, lines.join('\n') + '\n');
 }
 
-// Numbers and booleans are parsed; everything else stays a string.
+// RFC 4180 fields: quotes, embedded commas and doubled quotes. No embedded newlines.
+function splitCsvLine(line: string): string[] {
+  const cells: string[] = [];
+  let cur = '';
+  let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQ && ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+    else if (ch === '"') inQ = !inQ;
+    else if (ch === ',' && !inQ) { cells.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  cells.push(cur);
+  return cells;
+}
+
+// Numbers and booleans are parsed; everything else stays a string. Columns must match types.ts.
 export function readCsv<T>(path: string): T[] {
-  const [header, ...lines] = readFileSync(path, 'utf8').trim().split('\n');
-  const cols = header.split(',');
-  return lines.map((line) => {
-    const cells = line.split(',');
+  const [header, ...lines] = readFileSync(path, 'utf8').replace(/\r/g, '').trim().split('\n');
+  const cols = splitCsvLine(header).map((c) => c.trim());
+  return lines.filter((l) => l.trim() !== '').map((line) => {
+    const cells = splitCsvLine(line);
     const row: Record<string, unknown> = {};
     cols.forEach((c, i) => {
       const v = cells[i];

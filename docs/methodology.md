@@ -6,6 +6,8 @@ How the recommender turns a new campaign into a milestone ladder, and where it c
 
 Budget is the hard constraint. Motivation, fairness, fraud resistance and ROI are optimized inside it (decision 1). The brief asks for budget adherence "not just in expectation", and a brand can forgive a stingy ladder but not a blown budget. ROI-first was rejected for its weak retention story, retention-first for unpredictable spend.
 
+How the tradeoffs are weighted: budget comes first and is never traded. Inside that envelope, motivation and ROI are traded against each other through two dials, the quantile positions (how reachable each rung is) and the CPM cap (the most a view can cost). Fairness is handled structurally, one ladder per tier, rather than weighted. Fraud is handled by data hygiene and by budgeting for leakage, not by a weight.
+
 **Budget adherence.** The price per view is set so total payout stays within budget in 90% of 5,000 simulated runs, including tier mix, format mix and fraud leakage (decisions 8, 9). The top rung caps any one post. Not done: a 100% guarantee, which needs a mid-campaign stop or a far stingier ladder; 95% was rejected as 20 to 40% stingier. The CLI also prints p99 spend, so the size of a rare overshoot is visible before the ladder ships, not after.
 
 **Creator motivation and retention.** Rung 1 sits at the median, so half of posts earn something (decision 10). Later rungs sit where one in five, twenty and a hundred posts land, so each gap is a real step but reachable; in the worked example the gaps are 2.8x, 2.6x and 2.3x. A flat price per view means no gap is arbitrary. Not done: a fifth rung (rung 1 becomes too grindable), loyalty bonuses, or a model of how creators react to a new ladder.
@@ -155,5 +157,13 @@ The backtest replays each campaign's actual day-7 views through the actual and p
 - **Quantile positions are judgment,** deliberately. They are the part a human should own.
 - **Day 7 under-counts long-form,** which keeps growing.
 - **No time dynamics.** The ladder does not change mid-flight.
+
+**What would break it.**
+
+- A platform algorithm change, or a shift in what content the brand supplies, moves the view distribution. Thresholds fitted on old posts go stale until the new posts flow in; the shrinkage will keep leaning on the old cells until the new ones have about 20 posts.
+- A campaign whose views are not roughly lognormal, for example one with paid boosting behind it, breaks the quantile placement and the budget bound at the same time.
+- A creator count that is off by a factor of two moves the budget bound by about the same factor. The method has no defence against this beyond printing the count it used.
+- A failure of fraud flagging. The method budgets for the flagged share it sees in history; if flagging stops catching a new pattern, both the thresholds and the bound drift upward with the bought views.
+- Very small budgets against large creators: the top rung of a macro ladder can exceed the whole budget, and the 90% bound is then a single-post lottery.
 
 **More data that would help:** the growth-curve and fraud signals in section 4; each creator's full posting history, for multi-posting and baselines; the brand's real media-plan CPMs; past ladder changes and what creators did next, to measure the behavioural response replay cannot see; and views beyond day 7 for long-form.

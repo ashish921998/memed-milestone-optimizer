@@ -9,7 +9,7 @@ import { lognormalQuantile, mean, quantile, stddev } from './stats.ts';
 import { TIERS } from './types.ts';
 import type { Campaign } from './types.ts';
 
-const h = loadHistory();
+const h = loadHistory(process.argv.includes('--data') ? process.argv[process.argv.indexOf('--data') + 1] : 'data');
 const fmt = (x: number) => Math.round(x).toLocaleString('en-US');
 const rs = (x: number) => `Rs ${fmt(x)}`;
 const pct = (x: number, d = 0) => `${(x * 100).toFixed(d)}%`;

@@ -27,6 +27,8 @@ node src/serve.ts
 
 then open http://localhost:8787. Optional; the command line is the primary interface.
 
+**Running on your own sample.** Point any command at a folder with the same four CSVs and the column names in [src/types.ts](src/types.ts): `node src/cli.ts examples/campaign.json --data path/to/csvs`, `node src/backtest.ts --data path/to/csvs`, or `DATA_DIR=path/to/csvs node src/serve.ts`. Quoted fields are fine. Posts need `views_at_7d` and `flagged_suspicious`; the rest of the columns are read as-is.
+
 `--cpm <Rs per 1K views>` overrides the paid-media anchor. `--exclude <campaign_id>` fits on history without that campaign (used by the backtest). `--json` prints the full recommendation object.
 
 ## Read it
