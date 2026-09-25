@@ -19,6 +19,14 @@ Or with flags:
 node src/cli.ts --category finance --platform instagram --budget 800000 --tier micro --creators 60
 ```
 
+Or in a browser, same method behind a form:
+
+```bash
+node src/serve.ts
+```
+
+then open http://localhost:8787. Optional; the command line is the primary interface.
+
 `--cpm <Rs per 1K views>` overrides the paid-media anchor. `--exclude <campaign_id>` fits on history without that campaign (used by the backtest). `--json` prints the full recommendation object.
 
 ## Read it
@@ -40,6 +48,7 @@ src/
   fit.ts            lognormal fit per cell with hierarchical shrinkage
   recommend.ts      thresholds, Monte Carlo budget check, payouts
   cli.ts            command line
+  serve.ts          optional local web form in front of the same recommender
   backtest.ts       replay historical campaigns through both ladders
 data/               generated CSVs
 docs/               write-ups

@@ -8,6 +8,7 @@
     "generate": "node src/generate-data.ts",
     "recommend": "node src/cli.ts",
     "backtest": "node src/backtest.ts",
+    "serve": "node src/serve.ts",
     "test": "node src/stats.test.ts && node src/fit.test.ts"
   }
 }
