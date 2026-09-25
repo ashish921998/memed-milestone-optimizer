@@ -9,7 +9,7 @@ Zero dependencies. Node 22.6 or newer runs the TypeScript directly.
 ```bash
 node src/generate-data.ts        # writes data/*.csv (synthetic history, fixed seed)
 node src/cli.ts examples/campaign.json
-node src/backtest.ts             # writes docs/backtest.md
+node src/backtest.ts             # writes docs/backtest.md (about 25 s: 40 campaigns x 5,000 simulated runs)
 npm test                         # self-checks for the math and the fitter
 ```
 

@@ -6,7 +6,7 @@ How the recommender turns a new campaign into a milestone ladder, and where it c
 
 Budget is the hard constraint. Motivation, fairness, fraud resistance and ROI are optimized inside it (decision 1). The brief asks for budget adherence "not just in expectation", and a brand can forgive a stingy ladder but not a blown budget. ROI-first was rejected for its weak retention story, retention-first for unpredictable spend.
 
-**Budget adherence.** The price per view is set so total payout stays within budget in 90% of 5,000 simulated runs, including tier mix, format mix and fraud leakage (decisions 8, 9). The top rung caps any one post. Not done: a 100% guarantee, which needs a mid-campaign stop or a far stingier ladder; 95% was rejected as 20 to 40% stingier. The CLI prints spend at p50, p90 and mean, but not yet how far the worst 10% of runs overshoot.
+**Budget adherence.** The price per view is set so total payout stays within budget in 90% of 5,000 simulated runs, including tier mix, format mix and fraud leakage (decisions 8, 9). The top rung caps any one post. Not done: a 100% guarantee, which needs a mid-campaign stop or a far stingier ladder; 95% was rejected as 20 to 40% stingier. The CLI also prints p99 spend, so the size of a rare overshoot is visible before the ladder ships, not after.
 
 **Creator motivation and retention.** Rung 1 sits at the median, so half of posts earn something (decision 10). Later rungs sit where one in five, twenty and a hundred posts land, so each gap is a real step but reachable; in the worked example the gaps are 2.8x, 2.6x and 2.3x. A flat price per view means no gap is arbitrary. Not done: a fifth rung (rung 1 becomes too grindable), loyalty bonuses, or a model of how creators react to a new ladder.
 
@@ -150,6 +150,7 @@ The backtest replays each campaign's actual day-7 views through the actual and p
 - **Creator count is an input.** Wrong by 2x, the budget bound is wrong by roughly 2x.
 - **Replay assumes unchanged behaviour.** Creators respond to incentives, so the completion-rate comparison is a lower bound on the effect.
 - **Fraud labels are given, not detected.** The method is only as good as the flagging.
+- **The method budgets for fraud but does not reduce it.** Flagged posts take a similar share of payout under the proposed ladder as under the actual one (about 20% in C02), because their inflated day-7 views are paid like any other. Cutting that share needs detection, which is out of scope.
 - **The CPM table is an assumption.** In production it should come from the brand's media plan.
 - **Quantile positions are judgment,** deliberately. They are the part a human should own.
 - **Day 7 under-counts long-form,** which keeps growing.
