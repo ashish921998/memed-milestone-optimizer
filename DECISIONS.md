@@ -13,7 +13,7 @@ Given a new campaign (category, platform, budget, target creator tier, expected 
 |---|----------|--------|-----|----------|
 | 1 | What "optimized" means | Budget is the hard constraint; motivation, fairness, fraud, ROI are optimized inside it | Brief says "not just in expectation". A brand can forgive a stingy ladder, not a blown budget. Easiest to defend. | ROI-first (weak retention story). Retention-first (unpredictable spend). |
 | 2 | Creator tiers | One ladder per tier (nano/micro/mid/macro); thresholds scale with tier reach, price per view stays constant | Simple to explain and enforce. A brand sees one ladder per tier, not one per creator. | Normalized-to-baseline ladder (gameable, confusing to brands). Single uniform ladder (the status quo problem). |
-| 3 | View distribution model | Lognormal per cell | Heavy-tailed enough, two parameters, closed-form quantiles, fits from little data, standard and defensible. | Pareto (unstable mean hurts budget math). Bootstrap (no cold start, no model to validate). |
+| 3 | View distribution model | Lognormal per cell | Heavy-tailed enough, two parameters, fits from little data, standard and defensible. Thresholds come from 200,000 samples of the format mixture rather than a closed form, because a mixture of lognormals has no closed-form quantile. | Pareto (unstable mean hurts budget math). Bootstrap (no cold start, no model to validate). |
 | 4 | Language | TypeScript | Ashish's fluency for the live walkthrough. | Python (would have given scipy for free). |
 | 5 | Threshold placement | Fixed quantiles p50 / p80 / p95 / p99 | Every threshold has a plain-English meaning ("where the top 5% of posts land"). Answers "why 250K not 200K" with data. | Geometric spacing (magic ratio). |
 | 6 | Payout curve | Flat price per 1K views, anchored to paid-media CPM | Every rupee is comparable to the brand's alternative. Virality earns no premium, so buying views to reach the top rung has no extra payoff. | Front-loaded (overpays low reach). Back-loaded (budget-volatile, fraud magnet). |
@@ -21,7 +21,7 @@ Given a new campaign (category, platform, budget, target creator tier, expected 
 | 8 | Budget engine | Monte Carlo, 5,000 runs | Honest about tail risk, handles caps and tiers trivially, "we ran it 5,000 times" is a sentence a brand manager understands. | Closed-form plus normal approximation (shaky with heavy tails and small creator pools). |
 | 9 | Confidence level | 90% | 1 in 10 overshoot, by a bounded amount that is reported. Standard operating risk. | 95% (20-40% stingier). 80% (hard to say out loud to a brand). |
 | 10 | Number of rungs | 4 | Matches historical 4-rung ladders so the backtest compares like with like. p50 first rung gives half of posts an early win. | 5 rungs (first rung too grindable). Variable (rung count becomes an output to explain). |
-| 11 | Cold start | Hierarchical shrinkage: exact cell, then category+platform, then platform, then global, weighted by post count | One mechanism covers new categories and sparse cells. Textbook. | Nearest-neighbour campaigns (needs a similarity metric, fails on truly new category). Manual prior table (gut feel again). |
+| 11 | Cold start | Hierarchical shrinkage: global, then tier, then platform+tier, then category+platform+tier, then the exact cell with format. Each level blends with its parent at weight n/(n+20) | One mechanism covers new categories and sparse cells. Tier is kept at every level because reach scales with followers, so dropping it would be the worst possible prior. Pseudo-count 20 means a cell needs 20 posts to count as much as its parent. | Nearest-neighbour campaigns (needs a similarity metric, fails on truly new category). Manual prior table (gut feel again). |
 | 12 | Creator count | Input parameter; default is the median of similar historical campaigns | Ops knows the invite list. Keeps the model honest about what it predicts. | Always estimated (hides budget risk). Random per run (doubles variance). |
 | 13 | Loose budget | Cap rate at the CPM anchor, report headroom, suggest more creators or longer campaign | Never pay above ad rates. Brand keeps its money. | Let rate rise (defends overpaying). Convert to creator slots (creator count becomes an output). |
 | 14 | Synthetic data size | ~40 campaigns, ~600 creators, ~3,000 posts | Most cells have 20+ posts; some are sparse on purpose so shrinkage has something to show. CSVs stay readable. | 30K posts (unreadable, cold start has nothing to prove). 800 posts (too many empty cells). |
@@ -49,7 +49,7 @@ Synthetic data
 - Flagged posts: 5% of posts. Day-7 views inflated 3x to 8x above what the account's history predicts, and 90%+ of those views land in the first 24 hours (the spike signature).
 - Viral tail: 3% of clean posts get an extra multiplier drawn uniformly from 5x to 20x. This is the part the lognormal will not fit, on purpose (decision 23).
 - One post per creator per campaign. Simplification, marked in code.
-- Campaigns: 40, spread across 5 categories x 2 platforms. Budgets set the way a brand would: expected reach (about 65 creators x the tier's median views) priced at the category's creator CPM from the config table, times a tight/loose factor between 0.5 and 2.0, floor Rs 25K. So history holds both tight and loose budgets, and the budget assumption is the same CPM assumption the method uses, stated once. An earlier fixed Rs 1-25 lakh range made every campaign underspend, which would have made the backtest meaningless. 30 to 100 participating creators each.
+- Campaigns: 40, spread across 5 categories x 2 platforms. Budgets set the way a brand would: expected reach (65 creators x the geometric midpoint of the tier's follower band x a blended views-per-follower of 0.26 on Instagram and 0.38 on YouTube x the category multiplier) priced at the category's creator CPM from the config table, times a tight/loose factor between 0.5 and 2.0, floor Rs 25K. So history holds both tight and loose budgets, and the budget assumption is the same CPM assumption the method uses, stated once. An earlier fixed Rs 1-25 lakh range made every campaign underspend, which would have made the backtest meaningless. 30 to 100 participating creators each.
 - historical_completion_rate per creator = share of their past campaigns with at least one milestone hit, computed from the generated posts.
 
 CPM anchor table (Rs per 1,000 views, paid media, Instagram / YouTube)
@@ -69,17 +69,20 @@ Backtest selection rule, not hand-picked
 Monte Carlo
 - Fit uses every campaign except the one being recommended for, when that campaign exists in history (decision 22).
 - Each run also draws the historical flagged share of posts (about 5%) from the flagged distribution, so the budget bound includes fraud leakage (decision 24).
-- 5,000 runs. Each run draws N creators from the campaign's tier mix (default all target tier), one post each, views from the fitted lognormal, ladder applied at rate 1, sum the paid views. Payout is linear in rate, so rate = budget / 90th percentile of total paid views x 1000. No search needed.
+- 5,000 runs. Each run draws N creators from the campaign's tier mix (default: the historical tier mix of campaigns with the same target tier, because about 30% of participants come from adjacent tiers and ignoring them blew the budget in 20 of 40 replays), one post each, each paid on their own tier's ladder, views from the fitted lognormal, ladder applied at rate 1, sum the paid views. Payout is linear in rate, so rate = budget / 90th percentile of total paid views x 1000. No search needed.
 
 ## What each deliverable contains
 
 - A. docs/methodology.md: definition of optimized, weighting, the pipeline, view model and its validation on synthetic data (Q-Q style check of lognormal fit per cell), cold start, assumptions, limits.
-- B. src/: generate-data, fit, recommend, backtest. Run with npx tsx. Input is a JSON file of campaign parameters, output is a JSON ladder plus a printed table.
+- B. src/: generate-data, fit, recommend, backtest. Run with `node src/<file>.ts`, no install. Input is a JSON file of campaign parameters, output is a JSON ladder plus a printed table.
 - C. docs/backtest.md: generated by the code with real numbers for the four selected campaigns.
 - D. docs/one-pager.md: plain language, no formulas, with the three places it can still be wrong.
 - README.md: three commands to run everything.
 
 ## Known limits to state in the write-up
+
+- Found in the build: with tier spill, one macro-tier breakout in a mid-tier campaign can take most of the budget at the macro top rung. Leave-one-out replay put 5 of 40 campaigns over budget, 4 of them mid-tier for this reason. The honest fix is a per-post cap relative to budget. Not added: it is a policy choice for ops, and Ashish has not decided it.
+- Found in the build: the method budgets for fraud but does not reduce it. Flagged posts take a similar share of payout under the proposed ladder as under the actual one (about 20% in C02), because their inflated day-7 views are paid like any other. Reducing that share needs detection, which is out of scope.
 
 - Lognormal under-predicts extreme virality. The p99 rung will be conservative for true breakouts.
 - One post per creator ignores multi-posting creators.

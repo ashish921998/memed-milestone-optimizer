@@ -78,6 +78,7 @@ console.log(`tier mix         ${TIERS.filter((t) => rec.tier_mix[t] > 0).map((t)
 console.log(`spend p50        ${rs(rec.spend_p50)} (${pct(rec.spend_p50)})`);
 console.log(`spend p90        ${rs(rec.spend_p90)} (${pct(rec.spend_p90)})`);
 console.log(`spend mean       ${rs(rec.spend_mean)} (${pct(rec.spend_mean)})`);
+console.log(`spend p99        ${rs(rec.spend_p99)} (${pct(rec.spend_p99)}) worst 1-in-100 run, the size of an overshoot if it happens`);
 console.log(`rate used        Rs ${rec.rate_per_1k.toFixed(2)} per 1K views${rec.capped ? ' (capped)' : ''}`);
 console.log(`cap              Rs ${rec.creator_rate_cap.toFixed(2)} per 1K (paid-media CPM Rs ${rec.cpm_anchor} x share)`);
 console.log(`headroom         ${rs(rec.headroom)}${rec.capped ? ' unspent at p90: add creators or extend the campaign' : ''}`);

@@ -102,6 +102,7 @@ export interface Recommendation {
   expected_creators: number;
   spend_p50: number;
   spend_p90: number;
+  spend_p99: number; // decision 9: the size of a 1-in-100 overshoot, reported not hidden
   spend_mean: number;
   fit: FitLevel[]; // per format in the mix
 }

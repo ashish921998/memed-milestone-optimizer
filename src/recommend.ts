@@ -99,6 +99,7 @@ export function recommend(input: CampaignInput, history: History, rng: Rng = mul
     expected_creators,
     spend_p50: toRs(quantile(sums, 0.5)),
     spend_p90: toRs(p90Views),
+    spend_p99: toRs(quantile(sums, 0.99)),
     spend_mean: toRs(mean(sums)),
     fit,
     fraud_share: fraudShare,
