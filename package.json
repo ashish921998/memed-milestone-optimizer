@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.6" },
+  "engines": { "node": ">=22.18" },
   "scripts": {
     "generate": "node src/generate-data.ts",
     "recommend": "node src/cli.ts",

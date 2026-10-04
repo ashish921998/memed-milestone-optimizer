@@ -45,7 +45,7 @@ export function recommend(input: CampaignInput, history: History, rng: Rng = mul
   // and thresholds at quantiles of that tier's format mixture, rounded to 3 significant figures (brands read round numbers).
   const groups = TIERS.filter((t) => tier_mix[t] > 0 || t === tier).map((t) => {
     const fits = mix.map(([format, w]) => ({ format, w: w / totalWeight, ...fitViews(posts, { category, platform, format, tier: t }) }));
-    // ponytail: with no flagged history, fraud posts are drawn from the first clean fit, which understates bought views.
+    // Simplification: with no flagged history, fraud posts are drawn from the first clean fit, which understates bought views.
     const fraud = hasFlags ? fitViews(posts, { category, platform, format: mix[0][0], tier: t }, { flaggedOnly: true }).levels[2] : fits[0];
     const drawClean = () => {
       const f = pick(fits, rng);

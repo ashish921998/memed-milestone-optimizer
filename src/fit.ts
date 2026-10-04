@@ -61,7 +61,7 @@ export function fitViews(
   let sigma = NaN;
   const out: FitLevel[] = [];
   for (const [level, match] of levels) {
-    // ponytail: log(max(1, v)) so a zero-view post does not become -Infinity; zeros are clipped, not modelled.
+    // Simplification: log(max(1, v)) so a zero-view post does not become -Infinity; zeros are clipped, not modelled.
     const logs = pool.filter(match).map((p) => Math.log(Math.max(1, p.views_at_7d)));
     const n = logs.length;
     if (level === 'global') {
@@ -71,7 +71,7 @@ export function fitViews(
     } else if (n > 0) {
       const sigmaLevel = n < 2 ? sigma : stddev(logs);
       mu = (n * mean(logs) + k * mu) / (n + k);
-      // ponytail: blends sigma directly, not variance; ignores between-cell spread of means. Fine for shrinkage toward a prior.
+      // Simplification: blends sigma directly, not variance; ignores between-cell spread of means. Fine for shrinkage toward a prior.
       sigma = (n * sigmaLevel + k * sigma) / (n + k);
     }
     out.push({ level, n, mu, sigma });

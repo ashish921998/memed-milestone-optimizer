@@ -2,7 +2,7 @@
 
 Given a new campaign's parameters, output a milestone ladder: four (view threshold, cumulative payout) pairs that keep total spend within budget with 90% confidence, pay creators at a rate anchored to what the brand would pay for the same reach in paid media, and place thresholds where posts in that tier actually land.
 
-Zero dependencies. Node 22.6 or newer runs the TypeScript directly.
+Zero dependencies. Node 22.18 or newer (or 23.6+) runs the TypeScript directly. On older Node, replace `node` with `npx tsx` in every command below; nothing else changes.
 
 ## Run it
 

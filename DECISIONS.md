@@ -1,6 +1,6 @@
 # Decisions: Milestone Optimization for Brand Campaigns
 
-Date: 2026-09-25. Status: 24 decisions agreed, nothing built yet.
+Date: 2026-09-25. Status: 24 decisions agreed and built.
 Every choice below was made by Ashish in an interrogation session. Each row has the reason, so it can be defended live.
 
 ## The method in one paragraph
@@ -26,7 +26,7 @@ Given a new campaign (category, platform, budget, target creator tier, expected 
 | 13 | Loose budget | Cap rate at the CPM anchor, report headroom, suggest more creators or longer campaign | Never pay above ad rates. Brand keeps its money. | Let rate rise (defends overpaying). Convert to creator slots (creator count becomes an output). |
 | 14 | Synthetic data size | ~40 campaigns, ~600 creators, ~3,000 posts | Most cells have 20+ posts; some are sparse on purpose so shrinkage has something to show. CSVs stay readable. | 30K posts (unreadable, cold start has nothing to prove). 800 posts (too many empty cells). |
 | 15 | Backtest proxy | Replay each post's actual day-7 views through the actual and proposed ladders | Pure arithmetic on held-out outcomes. Metrics: spend vs budget, share of posts clearing rung 1, share of creators earning anything, effective CPM. | Model-based reachability (model grading itself). |
-| 16 | Tooling | Node (22.6+) running .ts natively, zero dependencies, hand-rolled normal math (Box-Muller sampling, erf-based CDF, Acklam inverse CDF) | About 40 lines of well-known formulas. Node 22.6+ strips types itself, so the reviewer runs `node src/cli.ts` with nothing to install, not even tsx. | simple-statistics (dependency for math that fits on one screen). Bun (extra hurdle if reviewer lacks it). |
+| 16 | Tooling | Node (22.18+) running .ts natively, zero dependencies, hand-rolled normal math (Box-Muller sampling, erf-based CDF, Acklam inverse CDF) | About 40 lines of well-known formulas. Node 22.18+ strips types itself, so the reviewer runs `node src/cli.ts` with nothing to install; `npx tsx` is the fallback on older Node. | simple-statistics (dependency for math that fits on one screen). Bun (extra hurdle if reviewer lacks it). |
 | 17 | CPM anchor | Per-category default table of Indian paid-media CPMs, creators paid at 80% of it, overridable per campaign | Finance and gaming views are worth different amounts. Paid media comes with targeting guarantees creators do not give, hence the discount. Defaults stated as assumptions. | Single flat number. Required input with no default. |
 | 18 | Status-quo ladders in synthetic data | Half the campaigns copy a house template regardless of tier; half use a follower-count heuristic with +/-50% noise | Two real failure modes, some campaigns will happen to be fine, and the backtest must show that too. Stated explicitly in the write-up. | Perturbing the method's own answer (circular). One template for all (one failure mode). |
 | 19 | View measurement window | Day 7 | Short-form reach lands within a week, creators get paid fast, a bought spike has to sustain a week. Long-form under-count is flagged as a limit. | Day 30 (creators wait a month). Final (undefined while live). |
@@ -92,11 +92,3 @@ Monte Carlo
 - CPM table is an assumption. In production it should come from the brand's actual media plan.
 - Quantile positions (p50/p80/p95/p99) are fixed by judgment, not optimized. That is deliberate: they are the part a human should own.
 - No within-campaign time dynamics. The ladder does not change mid-flight.
-
-## Environment
-
-Node v26.8.1, npm 11.19.0, git 2.50.1 available. Bun also present but not used.
-
-## Next step
-
-Ashish says go. Then build in this order: data generator, fitter, recommender, backtest, docs. Each step runnable on its own.

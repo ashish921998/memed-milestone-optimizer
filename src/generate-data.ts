@@ -101,7 +101,7 @@ for (let i = 0; i < 40; i++) {
 }
 
 // --- Participation ---
-// ponytail: one post per creator per campaign; multi-posting creators would need a post-count draw per (creator, campaign).
+// Simplification: one post per creator per campaign; multi-posting creators would need a post-count draw per (creator, campaign).
 const adjacent = (t: Tier) => TIERS.filter((x) => Math.abs(TIERS.indexOf(x) - TIERS.indexOf(t)) === 1);
 const roster = new Map<string, Creator[]>(campaigns.map((c) => [c.campaign_id, []]));
 for (const camp of campaigns) {
