@@ -128,6 +128,8 @@ Ladders for the target tier (nano); cumulative payout per post:
 - Four selected: within budget 3/4 actual vs 3/4 proposed; total spend Rs 2,115,550 actual vs Rs 4,367,060 proposed; mean completion 37% actual vs 44% proposed.
 - All 40 (leave-one-out each): within budget 21/40 actual vs 35/40 proposed; proposed over budget in 13% of campaigns (target at most 10%); total spend Rs 10,284,370 actual vs Rs 13,408,557 proposed; mean completion 44% actual vs 51% proposed.
 - The proposed over-budget share exceeds the 10% the 90% bound allows. Over budget: C03 (127%), C12 (166%), C21 (101%), C24 (100%), C30 (105%).
+- Per campaign: proposed pays less than actual in 29/40 and completion is better in 26/40. At a true 10% overshoot rate, 5 or more of 40 happens 37% of the time, so the observed count is consistent with the 90% bound.
+- Held-out rung calibration, 2530 clean posts, each scored against the ladder proposed without its own campaign: rung 1 49.2% (target 50%), rung 2 18.7% (target 20%), rung 3 5.6% (target 5%), rung 4 1.5% (target 1%).
 
 ## Model validation
 

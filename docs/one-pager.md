@@ -10,7 +10,7 @@ Give it the campaign: category, platform, budget, the size of creator you are ta
 - **Every step pays the same price per view, and that price never exceeds what the brand's ads cost.** I pay creators at most 80% of the brand's paid-media price for the same views.
 - **It rehearses the campaign 5,000 times** with realistic ups and downs, and sets the price so the budget holds in nine of ten rehearsals.
 - **Small and big creators get ladders scaled to their reach, at the same price per view.** A small creator's first step is as reachable for them as a big creator's is for them.
-- **I keep suspicious posts out of the numbers and pay on week-one views,** so a bought spike has to last a week to earn anything. The top step is also the most any one post can earn.
+- **I keep suspicious posts out of the numbers, pay on week-one views, and budget for the share of bought views that slips through.** The method does not catch fraud itself. It stops fraud from inflating the thresholds and keeps it inside the budget promise. The top step is also the most any one post can earn.
 
 ## Why this beats how ladders are set today
 
@@ -20,7 +20,7 @@ Give it the campaign: category, platform, budget, the size of creator you are ta
 | One house ladder for every creator size | Small creators never reach the first step and give up; big creators clear every step | Each size gets its own ladder at the same price per view |
 | Payouts guessed from follower counts | Price per view swings from campaign to campaign, sometimes above what ads cost | One price, never above the ad benchmark; any spare budget is reported |
 
-I replayed it on 40 past campaigns, using each campaign's real results:
+No real Meme'd data was available, so I built a synthetic history of 40 campaigns, 600 creators and about 2,700 posts, with the view patterns and fraud behaviour described in the methodology. I then replayed every campaign through its old ladder and through the ladder my method would have proposed without seeing that campaign:
 
 | Measure | Actual ladders | Proposed ladders |
 |---|---|---|
@@ -28,7 +28,7 @@ I replayed it on 40 past campaigns, using each campaign's real results:
 | Total spend | Rs 1.03 crore | Rs 1.34 crore |
 | Creators who earned something | 44% | 51% |
 
-Total spend goes up because 19 of the 40 campaigns had been paying out far below the budget the brand had set. The 5 campaigns still over budget are the one-in-ten the promise allows, and all but one are the viral-post case below.
+Total spend goes up because 21 of the 40 campaigns had been paying out below budget, 13 of them below half, and most of the increase is one large campaign that had been paying almost nothing. Across the 40, my ladder pays less than the old one in 29 and more creators earn something in 26. Five campaigns still end over budget. That is 12.5%, slightly above the one-in-ten the promise allows, and with only 40 campaigns a count that high happens about a third of the time even when the promise holds exactly. Four of the five are the viral-post case below.
 
 The replay assumes creators post the same content under either ladder. Real creators respond to better ladders, so the gain in completion is likely understated.
 

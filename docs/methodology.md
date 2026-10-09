@@ -8,7 +8,7 @@ I made budget the hard constraint and optimize motivation, fairness, fraud resis
 
 How I weight the tradeoffs: budget comes first and I never trade it. Inside that envelope, I trade motivation and ROI against each other through two dials, the quantile positions (how reachable each rung is) and the CPM cap (the most a view can cost). Fairness is structural, one ladder per tier. Fraud is handled by data hygiene and budgeting for leakage. Neither gets a weight.
 
-**Budget adherence.** I set the price per view so total payout stays within budget in 90% of 5,000 simulated runs, including tier mix, format mix and fraud leakage (decisions 8, 9). The top rung caps any one post. I did not offer a 100% guarantee, which needs a mid-campaign stop or a far stingier ladder, and rejected 95% as 20 to 40% stingier. The CLI also prints p99 spend, so a rare overshoot's size is visible before the ladder ships.
+**Budget adherence.** I set the price per view so total payout stays within budget in 90% of 5,000 simulated runs, including tier mix, format mix and fraud leakage (decisions 8, 9). The top rung caps any one post. I did not offer a 100% guarantee, which needs a mid-campaign stop or a far stingier ladder, and rejected 95%, which I measured at 12 to 16% stingier on the worked examples, as not worth the retention cost. The CLI also prints p99 spend, so a rare overshoot's size is visible before the ladder ships.
 
 **Creator motivation and retention.** I put rung 1 at the median, so half of posts earn something (decision 10). Later rungs sit where one in five, twenty and a hundred posts land, so each gap is a real step but reachable. In the worked example the gaps are 2.8x, 2.6x and 2.3x. A flat price per view means no gap is arbitrary. I did not add a fifth rung (rung 1 becomes too grindable), loyalty bonuses, or a model of how creators react to a new ladder.
 
@@ -109,7 +109,7 @@ One mechanism covers every cold start. A new category has no posts at the last t
 My three levers change both the numbers and the incentives (decision 7):
 
 1. **Clean fit.** Flagged posts never move a threshold.
-2. **Day-7 views.** A bought spike has to hold for a week before it is paid (decision 19).
+2. **Day-7 views.** Payment waits a week, which gives flagging time to run before money moves (decision 19). It does not by itself defeat a spike: views are cumulative, so a day-one spike is still in the day-7 count. In the backtest, flagged posts take a similar share of payout under my ladder as under the old one (C02: 22.6% against 18.8%). The method budgets for fraud; it does not reduce it.
 3. **Top rung is the cap.** No post earns more than the p99 payout, and the flat rate gives no premium for virality.
 
 The budget simulation adds flagged posts at their historical share, because some get paid before flagging catches them. Real detection needs growth-curve data my method does not use: the 24-hour to 7-day view ratio (about 45% for clean synthetic posts, 90 to 98% for flagged ones); account history, meaning views against the account's own past average and account age; engagement-to-view ratio; and referral or traffic source.
@@ -140,7 +140,9 @@ The budget simulation adds flagged posts at their historical share, because some
 
 ## 6. Validation
 
-[docs/backtest.md](backtest.md) compares each tier's fitted quantiles with the observed share of clean posts above them. If the lognormal were right, 1% would land above the fitted p99. Observed: nano 1.1%, micro 1.7%, mid 1.2%, macro 1.6%. The body of the distribution holds within 5% at p50 and p80 for every tier. The p95 and p99 are under-predicted by up to 28% for micro and 20% for mid and macro. The excess is the planted viral tail, which is the evidence for the first limit below.
+[docs/backtest.md](backtest.md) compares each tier's fitted quantiles with the observed share of clean posts above them. If the lognormal were right, 1% would land above the fitted p99. Observed: nano 1.1%, micro 1.7%, mid 1.2%, macro 1.6%. The body of the distribution holds within 5% at p50 for every tier and within 10% at p80. In the tail the fit is off in both directions: micro p99 is under-predicted by 28%, mid and macro p95 by about 20%, while micro p95 and macro p99 are slightly over-predicted. The excess above the fitted p99 is the planted viral tail, which is the evidence for the first limit below.
+
+That check is in-sample and on data that is lognormal by construction, so on its own it proves little. The check that matters is held out: for every campaign, I score its clean posts against the ladder proposed without that campaign and count how many clear each rung. Across 2,530 posts the shares are 49.2%, 18.7%, 5.6% and 1.5% against targets of 50%, 20%, 5% and 1%. The rungs land where I say they land, and the top rung is reached a little more often than the model expects, which is the viral tail again.
 
 The backtest replays each campaign's actual day-7 views through the actual and proposed ladders. I fit leave-one-campaign-out so the proposal never sees the campaign's own posts (decisions 15, 22).
 

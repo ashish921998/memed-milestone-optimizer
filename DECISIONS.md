@@ -21,7 +21,7 @@ Columns: what I decided, why, and what I turned down.
 | 6 | Payout curve | Flat price per 1K views, anchored to paid-media CPM | Every rupee is comparable to the brand's alternative. Virality earns no premium, so buying views to reach the top rung has no extra payoff. | Front-loaded (overpays low reach). Back-loaded (budget-volatile, fraud magnet). |
 | 7 | Fraud handling | Built into the method: fit on non-flagged posts, pay on day-7 views, top rung caps per-post payout. Write-up lists growth-curve data needed for real detection. | Changes both the numbers and the incentives with almost no extra code. | Budget haircut only (no incentive change). Document only (brief says "account for it somehow"). |
 | 8 | Budget engine | Monte Carlo, 5,000 runs | Honest about tail risk, handles caps and tiers trivially, "we ran it 5,000 times" is a sentence a brand manager understands. | Closed-form plus normal approximation (shaky with heavy tails and small creator pools). |
-| 9 | Confidence level | 90% | 1 in 10 overshoot, by a bounded amount that is reported. Standard operating risk. | 95% (20-40% stingier). 80% (hard to say out loud to a brand). |
+| 9 | Confidence level | 90% | 1 in 10 overshoot, by a bounded amount that is reported. Standard operating risk. | 95% (measured 12 to 16% stingier). 80% (hard to say out loud to a brand). |
 | 10 | Number of rungs | 4 | Matches historical 4-rung ladders so the backtest compares like with like. p50 first rung gives half of posts an early win. | 5 rungs (first rung too grindable). Variable (rung count becomes an output to explain). |
 | 11 | Cold start | Hierarchical shrinkage: global, then tier, then platform+tier, then category+platform+tier, then the exact cell with format. Each level blends with its parent at weight n/(n+20) | One mechanism covers new categories and sparse cells. Tier is kept at every level because reach scales with followers, so dropping it would be the worst possible prior. Pseudo-count 20 means a cell needs 20 posts to count as much as its parent. | Nearest-neighbour campaigns (needs a similarity metric, fails on truly new category). Manual prior table (gut feel again). |
 | 12 | Creator count | Input parameter; default is the median of similar historical campaigns | Ops knows the invite list. Keeps the model honest about what it predicts. | Always estimated (hides budget risk). Random per run (doubles variance). |
@@ -31,12 +31,12 @@ Columns: what I decided, why, and what I turned down.
 | 16 | Tooling | Node (22.18+) running .ts natively, zero dependencies, hand-rolled normal math (Box-Muller sampling, erf-based CDF, Acklam inverse CDF) | About 40 lines of well-known formulas. Node 22.18+ strips types itself, so the reviewer runs `node src/cli.ts` with nothing to install; `npx tsx` is the fallback on older Node. | simple-statistics (dependency for math that fits on one screen). Bun (extra hurdle if reviewer lacks it). |
 | 17 | CPM anchor | Per-category default table of Indian paid-media CPMs, creators paid at 80% of it, overridable per campaign | Finance and gaming views are worth different amounts. Paid media comes with targeting guarantees creators do not give, hence the discount. Defaults stated as assumptions. | Single flat number. Required input with no default. |
 | 18 | Status-quo ladders in synthetic data | Half the campaigns copy a house template regardless of tier; half use a follower-count heuristic with +/-50% noise | Two real failure modes, some campaigns will happen to be fine, and the backtest must show that too. Stated explicitly in the write-up. | Perturbing the method's own answer (circular). One template for all (one failure mode). |
-| 19 | View measurement window | Day 7 | Short-form reach lands within a week, creators get paid fast, a bought spike has to sustain a week. Long-form under-count is flagged as a limit. | Day 30 (creators wait a month). Final (undefined while live). |
+| 19 | View measurement window | Day 7 | Short-form reach lands within a week, creators get paid fast, flagging has a week to run before money moves. Long-form under-count is flagged as a limit. | Day 30 (creators wait a month). Final (undefined while live). |
+| 20 | Packaging | One git repo, markdown docs, generated CSVs and backtest report | Three commands for the reviewer. Git history shows how the work was built. | PDF exports (extra build step). Zip (no history). |
 | 21 | Rate calculation | Direct: simulate once at rate 1, rate = budget / p90 of total paid views | Payout is linear in the rate, so the answer has a closed form. One simulation, exact, easy to explain. | Bisection search (searching for something with a closed form). |
 | 22 | Backtest fitting | Leave-one-campaign-out: fit the view model on every campaign except the one being backtested | Section C says "pretending you don't know how they actually turned out". Fitting on the tested campaign's own posts contaminates the proposal. | Fitting on all history (leakage). |
 | 23 | Viral tail in synthetic data | About 3% of posts get an extra 5x to 20x multiplier on top of the lognormal | Section 5 grades "validate rather than assert". If the data comes from the same lognormal the model fits, the validation is circular. The tail makes the fit check real and the limits section evidence-based. | Pure lognormal data (perfect fit, proves nothing). |
 | 24 | Fraud in the budget simulation | Each Monte Carlo run draws the historical flagged share of posts from the flagged view distribution | Thresholds stay clean (decision 7) but the budget bound has to reflect that some bought views get paid before flagging catches them. One line, makes "budget is hard" honest. | Zero-fraud simulation (unrealistic, understates spend). |
-| 20 | Packaging | One git repo, markdown docs, generated CSVs and backtest report | Three commands for the reviewer. Git history shows how the work was built. | PDF exports (extra build step). Zip (no history). |
 
 ## Second-order defaults
 
@@ -77,11 +77,11 @@ Monte Carlo
 
 What I built against the brief:
 
-- A. docs/methodology.md: definition of optimized, weighting, the pipeline, view model and its validation on synthetic data (Q-Q style check of lognormal fit per cell), cold start, assumptions, limits.
+- A. docs/methodology.md: definition of optimized, weighting, the pipeline, view model and its validation: in-sample quantile check per tier, plus a held-out rung calibration across all 40 campaigns, cold start, assumptions, limits.
 - B. src/: generate-data, fit, recommend, backtest. Run with `node src/<file>.ts`, no install. Input is a JSON file of campaign parameters, output is a JSON ladder plus a printed table.
 - C. docs/backtest.md: generated by the code with real numbers for the four selected campaigns.
 - D. docs/one-pager.md: plain language, no formulas, with the three places it can still be wrong.
-- README.md: three commands to run everything.
+- README.md: four commands to run everything, plus an optional local web form.
 
 ## Known limits I state in the write-up
 

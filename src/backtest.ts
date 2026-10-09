@@ -68,7 +68,10 @@ function replay(c: Campaign) {
   };
   const actual = side(() => hist);
   assert.equal(actual.spend, sum(ps.map((p) => p.total_payout_earned)), `${c.campaign_id}: replay must reproduce recorded payouts`);
-  return { c, n: ps.length, rec, hist, actual, proposed: side((p) => rec.ladders[p.tier] ?? rec.rungs) };
+  // Held-out calibration: how many of this campaign's clean posts clear each rung of the ladder proposed without it.
+  const clean = ps.filter((p) => !p.flagged_suspicious);
+  const hits = [0, 1, 2, 3].map((k) => clean.filter((p) => p.views_at_7d >= (rec.ladders[p.tier] ?? rec.rungs)[k].view_threshold).length);
+  return { c, n: ps.length, rec, hist, actual, proposed: side((p) => rec.ladders[p.tier] ?? rec.rungs), clean: clean.length, hits };
 }
 const all = h.campaigns.map(replay);
 const byId = new Map(all.map((r) => [r.c.campaign_id, r]));
@@ -131,7 +134,23 @@ const overNote =
   overQ.length / 40 > 0.1
     ? `The proposed over-budget share exceeds the 10% the 90% bound allows. Over budget: ${overQ.map((r) => `${r.c.campaign_id} (${pct(r.proposed.spend / r.c.total_budget)})`).join(', ')}.`
     : `Proposed over budget: ${overQ.map((r) => `${r.c.campaign_id} (${pct(r.proposed.spend / r.c.total_budget)})`).join(', ') || 'none'}.`;
-out.push('', '## Aggregate', '', `- ${line4}`, `- ${line40}`, `- ${overNote}`);
+// Binomial: chance of seeing this many or more over-budget campaigns out of 40 if the true rate were exactly 10%.
+const binomTail = (n: number, p: number, k: number) => {
+  let below = 0;
+  for (let i = 0; i < k; i++) {
+    let comb = 1;
+    for (let j = 0; j < i; j++) comb = (comb * (n - j)) / (j + 1);
+    below += comb * p ** i * (1 - p) ** (n - i);
+  }
+  return 1 - below;
+};
+const lessN = all.filter((r) => r.proposed.spend < r.actual.spend).length;
+const betterN = all.filter((r) => r.proposed.completion > r.actual.completion).length;
+const perCampaign = `Per campaign: proposed pays less than actual in ${lessN}/40 and completion is better in ${betterN}/40. At a true 10% overshoot rate, ${overQ.length} or more of 40 happens ${pct(binomTail(40, 0.1, overQ.length))} of the time, so the observed count is consistent with the 90% bound.`;
+const cleanN = sum(all.map((r) => r.clean));
+const calib = [0, 1, 2, 3].map((k) => `rung ${k + 1} ${(100 * sum(all.map((r) => r.hits[k])) / cleanN).toFixed(1)}% (target ${[50, 20, 5, 1][k]}%)`).join(', ');
+const calibLine = `Held-out rung calibration, ${cleanN} clean posts, each scored against the ladder proposed without its own campaign: ${calib}.`;
+out.push('', '## Aggregate', '', `- ${line4}`, `- ${line40}`, `- ${overNote}`, `- ${perCampaign}`, `- ${calibLine}`);
 
 // Part 3: tier-level lognormal fit, mu/sigma of log views computed directly (same log(max(1, v)) clip as fitViews).
 const ps_ = [0.5, 0.8, 0.95, 0.99];
