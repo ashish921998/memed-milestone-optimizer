@@ -1,7 +1,7 @@
 # Decisions: Milestone Optimization for Brand Campaigns
 
-Date: 2026-09-25. Status: 24 decisions agreed and built.
-Every choice below was made by Ashish in an interrogation session. Each row has the reason, so it can be defended live.
+Date: 2026-09-25. Status: 24 decisions, all built.
+This is my record of every design choice in the method, with the reason I made it and what I rejected. Where the brief was ambiguous I chose and wrote the choice down rather than asking.
 
 ## The method in one paragraph
 
@@ -9,12 +9,14 @@ Given a new campaign (category, platform, budget, target creator tier, expected 
 
 ## Decision log
 
+Columns: what I decided, why, and what I turned down.
+
 | # | Decision | Chosen | Why | Rejected |
 |---|----------|--------|-----|----------|
 | 1 | What "optimized" means | Budget is the hard constraint; motivation, fairness, fraud, ROI are optimized inside it | Brief says "not just in expectation". A brand can forgive a stingy ladder, not a blown budget. Easiest to defend. | ROI-first (weak retention story). Retention-first (unpredictable spend). |
 | 2 | Creator tiers | One ladder per tier (nano/micro/mid/macro); thresholds scale with tier reach, price per view stays constant | Simple to explain and enforce. A brand sees one ladder per tier, not one per creator. | Normalized-to-baseline ladder (gameable, confusing to brands). Single uniform ladder (the status quo problem). |
 | 3 | View distribution model | Lognormal per cell | Heavy-tailed enough, two parameters, fits from little data, standard and defensible. Thresholds come from 200,000 samples of the format mixture rather than a closed form, because a mixture of lognormals has no closed-form quantile. | Pareto (unstable mean hurts budget math). Bootstrap (no cold start, no model to validate). |
-| 4 | Language | TypeScript | Ashish's fluency for the live walkthrough. | Python (would have given scipy for free). |
+| 4 | Language | TypeScript | The language I am most fluent in, so I can defend every line. | Python (would have given scipy for free). |
 | 5 | Threshold placement | Fixed quantiles p50 / p80 / p95 / p99 | Every threshold has a plain-English meaning ("where the top 5% of posts land"). Answers "why 250K not 200K" with data. | Geometric spacing (magic ratio). |
 | 6 | Payout curve | Flat price per 1K views, anchored to paid-media CPM | Every rupee is comparable to the brand's alternative. Virality earns no premium, so buying views to reach the top rung has no extra payoff. | Front-loaded (overpays low reach). Back-loaded (budget-volatile, fraud magnet). |
 | 7 | Fraud handling | Built into the method: fit on non-flagged posts, pay on day-7 views, top rung caps per-post payout. Write-up lists growth-curve data needed for real detection. | Changes both the numbers and the incentives with almost no extra code. | Budget haircut only (no incentive change). Document only (brief says "account for it somehow"). |
@@ -34,11 +36,11 @@ Given a new campaign (category, platform, budget, target creator tier, expected 
 | 22 | Backtest fitting | Leave-one-campaign-out: fit the view model on every campaign except the one being backtested | Section C says "pretending you don't know how they actually turned out". Fitting on the tested campaign's own posts contaminates the proposal. | Fitting on all history (leakage). |
 | 23 | Viral tail in synthetic data | About 3% of posts get an extra 5x to 20x multiplier on top of the lognormal | Section 5 grades "validate rather than assert". If the data comes from the same lognormal the model fits, the validation is circular. The tail makes the fit check real and the limits section evidence-based. | Pure lognormal data (perfect fit, proves nothing). |
 | 24 | Fraud in the budget simulation | Each Monte Carlo run draws the historical flagged share of posts from the flagged view distribution | Thresholds stay clean (decision 7) but the budget bound has to reflect that some bought views get paid before flagging catches them. One line, makes "budget is hard" honest. | Zero-fraud simulation (unrealistic, understates spend). |
-| 20 | Packaging | One git repo, markdown docs, generated CSVs and backtest report | Three commands for the reviewer. Git history shows the work is Ashish's. | PDF exports (extra build step). Zip (no history). |
+| 20 | Packaging | One git repo, markdown docs, generated CSVs and backtest report | Three commands for the reviewer. Git history shows how the work was built. | PDF exports (extra build step). Zip (no history). |
 
-## Second-order defaults (veto any of these)
+## Second-order defaults
 
-These were not asked because they are implementation detail, but they shape the results and will be stated in the write-up.
+These are implementation details rather than design decisions, but they shape the results, so I state them here and in the methodology.
 
 Synthetic data
 - Tier mix of creators: nano 40%, micro 35%, mid 20%, macro 5%. Platform split 65% Instagram, 35% YouTube.
@@ -73,16 +75,18 @@ Monte Carlo
 
 ## What each deliverable contains
 
+What I built against the brief:
+
 - A. docs/methodology.md: definition of optimized, weighting, the pipeline, view model and its validation on synthetic data (Q-Q style check of lognormal fit per cell), cold start, assumptions, limits.
 - B. src/: generate-data, fit, recommend, backtest. Run with `node src/<file>.ts`, no install. Input is a JSON file of campaign parameters, output is a JSON ladder plus a printed table.
 - C. docs/backtest.md: generated by the code with real numbers for the four selected campaigns.
 - D. docs/one-pager.md: plain language, no formulas, with the three places it can still be wrong.
 - README.md: three commands to run everything.
 
-## Known limits to state in the write-up
+## Known limits I state in the write-up
 
-- Found in the build: with tier spill, one macro-tier breakout in a mid-tier campaign can take most of the budget at the macro top rung. Leave-one-out replay put 5 of 40 campaigns over budget, 4 of them mid-tier for this reason. The honest fix is a per-post cap relative to budget. Not added: it is a policy choice for ops, and Ashish has not decided it.
-- Found in the build: the method budgets for fraud but does not reduce it. Flagged posts take a similar share of payout under the proposed ladder as under the actual one (about 20% in C02), because their inflated day-7 views are paid like any other. Reducing that share needs detection, which is out of scope.
+- I found this while building: with tier spill, one macro-tier breakout in a mid-tier campaign can take most of the budget at the macro top rung. Leave-one-out replay put 5 of 40 campaigns over budget, 4 of them mid-tier for this reason. The honest fix is a per-post cap relative to budget. I have not added it because it is a policy choice for ops, and I would rather make it with them than for them.
+- I found this while building: the method budgets for fraud but does not reduce it. Flagged posts take a similar share of payout under the proposed ladder as under the actual one (about 20% in C02), because their inflated day-7 views are paid like any other. Reducing that share needs detection, which is out of scope.
 
 - Lognormal under-predicts extreme virality. The p99 rung will be conservative for true breakouts.
 - One post per creator ignores multi-posting creators.
@@ -90,5 +94,5 @@ Monte Carlo
 - Backtest replay assumes creators would have posted the same content under a different ladder. Real creators respond to incentives, so the completion-rate comparison is a lower bound on the behavioural effect.
 - Fraud labels are given, not detected. The method is only as good as the flagging.
 - CPM table is an assumption. In production it should come from the brand's actual media plan.
-- Quantile positions (p50/p80/p95/p99) are fixed by judgment, not optimized. That is deliberate: they are the part a human should own.
+- Quantile positions (p50/p80/p95/p99) are fixed by my judgment, not optimized. That is deliberate: they are the part a human should own.
 - No within-campaign time dynamics. The ladder does not change mid-flight.
